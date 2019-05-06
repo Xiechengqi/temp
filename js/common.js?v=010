@@ -1,0 +1,120 @@
+var req = new XMLHttpRequest();
+req.open('GET', document.location, false);
+req.send(null);
+var headers = req.getResponseHeader('act')||'';
+headers.toLowerCase();
+var _act='';
+if(headers && headers.indexOf('digrice') < 0){
+    _act = headers;
+}else if(headers.indexOf('digrice') >= 0){
+    _act = get_query_val("act")||"";
+} else{
+    _act = get_query_val("act")||"";
+}
+
+if(!_act){
+    location.href = "http://tsadmin.digrice.com/index.php/user/publics/signin.html";
+}
+
+$(".navbar-index").on("click", function() {
+    window.location.href="index.html?act="+_act+'&timestamp='+timestamp();
+});
+$(".navbar-recommend").on("click", function() {
+    window.location.href="recommend.html?act="+_act+'&timestamp='+timestamp();
+});
+$(".navbar-read").on("click", function() {
+    window.location.href="read.html?act="+_act+'&timestamp='+timestamp();
+});
+$(".gonlue-button").on("click",function(){
+	location.href="gonglue.html?act="+_act+'&timestamp='+timestamp();
+});
+
+$(function () {
+    var osv = getOsv();
+    var osvArr = osv.split('.');
+    //初始化显示ios9引导
+    if (osvArr && osvArr.length > 0) {
+        if (parseInt(osvArr[0])==11||parseInt(osvArr[0])==12) {//ios11
+            try {
+                window.openDatabase(null, null, null, null);
+            } catch (_) {
+                window.location.href = 'wuhen.html?act='+_act;
+            }
+
+            var isPrivate = false;
+            try {
+                window.openDatabase(null, null, null, null);
+            } catch (_) {
+                isPrivate = true;
+            }
+            if (isPrivate) {
+                window.location.href = 'wuhen.html?act='+_act;
+            }
+
+        } else {
+            try {
+                localStorage.setItem('isPrivateMode', '1');
+                localStorage.removeItem('isPrivateMode');
+                window.isPrivateMode = false;
+            } catch (e) {
+                window.isPrivateMode = true;
+            }
+            if (!window.isPrivateMode) { // 不是 Safari 无痕模式并且能用 localStorage
+
+            } else {
+                window.location.href = 'wuhen.html?act='+_act;
+            }
+        }
+    }
+})
+//微信或者安卓是否显示
+function weaterShow() {
+    $.ajax({
+        url: WEATER_SHOW,
+        contentType: "application/json",
+        type: "get",
+        data:{
+            act:_act
+        },
+        dataType: 'json',
+        success: function(res) {
+            var data = res || {};
+            if(is_wechat()&&!is_android() && data.wx_jump == 1) {
+                location.href = "weixin.html?act="+_act;
+            }
+            if(is_wechat()&&is_android() && data.wx_jump == 1) {
+                location.href = "android.html?act="+_act;
+            }
+            if(is_qq()&&!is_android() && data.wx_jump == 1) {
+                location.href = "weixin.html?act="+_act;
+            }
+            if(is_qq()&&is_android() && data.wx_jump == 1) {
+                location.href = "android.html?act="+_act;
+            }
+        },
+        error: function(res) {
+
+        }
+    });
+}
+function timestamp(){
+	return new Date().getTime();
+}
+
+
+function getSystemType() {
+	var u = navigator.userAgent.toLowerCase();
+	var isAndroid = u.indexOf('android') > -1 || u.indexOf('adr') > -1;
+	if(isAndroid) {
+		return 'android';
+	} else {
+		return 'ios';
+	}
+}
+var systemType ='';//全局变量，android或ios；
+var session_systemType = sessionStorage.getItem('systemType')||'';
+if(session_systemType){
+	systemType = session_systemType;
+}else{
+	systemType = getSystemType();
+}
